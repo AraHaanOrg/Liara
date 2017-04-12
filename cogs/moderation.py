@@ -143,6 +143,28 @@ class Moderation:
             await ctx.send('That ID is invalid.')
 
     @commands.command(no_pm=True)
+    @checks.mod_or_permissions(ban_members=True)
+    async def quickban(self, ctx):
+        """Bans multiple members by their ID."""
+        members = ctx.message.content[len(ctx.prefix + quickban):].strip()
+        user_ids = members.split(" ")  # split at a space between id's.
+        all_ok = True
+        for user_id in user_ids:
+            try:
+                await self.liara.http.ban(user_id, str(ctx.guild.id))
+            except discord.NotFound:
+                await ctx.send('That user doesn\'t exist.')
+                all_ok = False
+            except discord.Forbidden:
+                await ctx.send('Sorry, I don\'t have permission to ban that person here.')
+                all_ok = False
+            except discord.HTTPException:
+                await ctx.send('That ID is invalid.')
+                all_ok = False
+        if all_ok:
+            await ctx.send('Done. Good riddance.')
+
+    @commands.command(no_pm=True)
     @checks.mod_or_permissions(kick_members=True)
     async def softban(self, ctx, member: discord.Member, days_to_clean: int=1):
         """Kicks a member, removing all their messages in the process."""
